@@ -6,6 +6,10 @@ import { map } from "rxjs/operators";
 export const routes: Routes = [
   {
     path: "",
+    loadComponent: () => import("./features/chat/chat.component"),
+  },
+  {
+    path: "home",
     loadComponent: () => import("./features/article/pages/home/home.component"),
   },
   {
