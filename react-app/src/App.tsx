@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { ProfileArticles } from './components/profile/ProfileArticles';
+import { ProfileFavorites } from './components/profile/ProfileFavorites';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -75,8 +77,10 @@ function App() {
             }
           />
           <Route path="/article/:slug" element={<ArticlePage />} />
-          <Route path="/profile/:username" element={<ProfilePage />} />
-          <Route path="/profile/:username/favorites" element={<ProfilePage />} />
+          <Route path="/profile/:username" element={<ProfilePage />}>
+            <Route index element={<ProfileArticles />} />
+            <Route path="favorites" element={<ProfileFavorites />} />
+          </Route>
         </Routes>
       </Suspense>
       <Footer />
