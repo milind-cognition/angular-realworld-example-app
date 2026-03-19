@@ -11,8 +11,18 @@ interface UseProfileResult {
 
 export function useProfile(username: string | undefined): UseProfileResult {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!!username);
   const [error, setError] = useState<string | null>(null);
+  const [prevUsername, setPrevUsername] = useState(username);
+
+  // React-recommended pattern: adjust state during render when props change
+  // See https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  if (prevUsername !== username) {
+    setPrevUsername(username);
+    setProfile(null);
+    setIsLoading(!!username);
+    setError(null);
+  }
 
   useEffect(() => {
     if (!username) return;

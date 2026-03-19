@@ -19,6 +19,11 @@ export function useArticles(
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Reset page when config changes (e.g., switching tabs)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [config]);
+
   const fetchArticles = useCallback(
     async (page: number, queryConfig: ArticleListConfig) => {
       setIsLoading(true);
