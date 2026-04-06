@@ -46,7 +46,7 @@ function AppRoutes() {
         path="/login"
         element={
           <RedirectIfAuth>
-            <Auth />
+            <Auth key="login" />
           </RedirectIfAuth>
         }
       />
@@ -54,7 +54,7 @@ function AppRoutes() {
         path="/register"
         element={
           <RedirectIfAuth>
-            <Auth />
+            <Auth key="register" />
           </RedirectIfAuth>
         }
       />
