@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import { Article } from "../types/article";
 import { Comment } from "../types/comment";
 import { articlesService } from "../services/articles";
@@ -30,7 +31,7 @@ export function ArticleView() {
   }
 
   const isAuthor = currentUser?.username === article.author.username;
-  const markup = { __html: marked(article.body) as string };
+  const markup = { __html: DOMPurify.sanitize(marked(article.body) as string) };
 
   const handleDelete = async () => {
     setIsDeleting(true);
