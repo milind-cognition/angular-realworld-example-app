@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Article } from "../types/article";
 import { ArticleListConfig } from "../types/article-list-config";
 import { articlesService } from "../services/articles";
@@ -16,22 +16,33 @@ export function ArticleList({ config }: ArticleListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  const configType = config.type;
+  const configTag = config.filters.tag;
+  const configAuthor = config.filters.author;
+  const configFavorited = config.filters.favorited;
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [config.type, config.filters.tag, config.filters.author, config.filters.favorited]);
+  }, [configType, configTag, configAuthor, configFavorited]);
+
+  const fetchArticles = useCallback(() => {
+    return {
+      type: configType,
+      filters: {
+        tag: configTag,
+        author: configAuthor,
+        favorited: configFavorited,
+        limit: ARTICLES_PER_PAGE,
+        offset: ARTICLES_PER_PAGE * (currentPage - 1),
+      },
+    } as ArticleListConfig;
+  }, [configType, configTag, configAuthor, configFavorited, currentPage]);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
 
-    const queryConfig: ArticleListConfig = {
-      ...config,
-      filters: {
-        ...config.filters,
-        limit: ARTICLES_PER_PAGE,
-        offset: ARTICLES_PER_PAGE * (currentPage - 1),
-      },
-    };
+    const queryConfig = fetchArticles();
 
     articlesService
       .query(queryConfig)
@@ -51,7 +62,7 @@ export function ArticleList({ config }: ArticleListProps) {
     return () => {
       cancelled = true;
     };
-  }, [config, currentPage]);
+  }, [fetchArticles]);
 
   const totalPages = Math.ceil(articlesCount / ARTICLES_PER_PAGE);
 

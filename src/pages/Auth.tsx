@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ListErrors } from "../components/ListErrors";
@@ -17,6 +17,14 @@ export function Auth() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Errors | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setErrors(null);
+    setIsSubmitting(false);
+  }, [isLogin]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

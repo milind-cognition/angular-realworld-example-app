@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Profile as ProfileType } from "../types/profile";
 import { ArticleListConfig } from "../types/article-list-config";
@@ -17,9 +17,13 @@ export function Profile() {
   const isFavorites = location.pathname.endsWith("/favorites");
   const isOwnProfile = currentUser?.username === username;
 
-  const listConfig: ArticleListConfig = isFavorites
-    ? { type: "all", filters: { favorited: username } }
-    : { type: "all", filters: { author: username } };
+  const listConfig: ArticleListConfig = useMemo(
+    () =>
+      isFavorites
+        ? { type: "all", filters: { favorited: username ?? "" } }
+        : { type: "all", filters: { author: username ?? "" } },
+    [isFavorites, username],
+  );
 
   useEffect(() => {
     if (username) {

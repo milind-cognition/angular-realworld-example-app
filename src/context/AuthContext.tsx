@@ -81,7 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await api.put<{ user: User }>("/user", {
       user: userData,
     });
-    setCurrentUser(response.data.user);
+    const user = response.data.user;
+    jwtService.saveToken(user.token);
+    setCurrentUser(user);
   }, []);
 
   return (
