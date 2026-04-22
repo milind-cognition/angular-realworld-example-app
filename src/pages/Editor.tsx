@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent, type KeyboardEvent } from "react";
+import { useState, useEffect, type KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { articlesService } from "../services/articles";
@@ -52,12 +52,17 @@ export default function Editor() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handlePublish = async () => {
     setIsSubmitting(true);
-    addTag();
+    const pendingTag = tagInput.trim();
+    const finalTagList =
+      pendingTag && !tagList.includes(pendingTag)
+        ? [...tagList, pendingTag]
+        : tagList;
+    setTagList(finalTagList);
+    setTagInput("");
 
-    const articleData = { title, description, body, tagList };
+    const articleData = { title, description, body, tagList: finalTagList };
 
     try {
       const article = slug
@@ -77,7 +82,7 @@ export default function Editor() {
           <div className="col-md-10 offset-md-1 col-xs-12">
             <ListErrors errors={errors} />
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={(e) => e.preventDefault()}>
               <fieldset disabled={isSubmitting}>
                 <fieldset className="form-group">
                   <input
@@ -133,7 +138,8 @@ export default function Editor() {
 
                 <button
                   className="btn btn-lg pull-xs-right btn-primary"
-                  type="submit"
+                  type="button"
+                  onClick={handlePublish}
                 >
                   Publish Article
                 </button>
