@@ -8,20 +8,13 @@ interface ArticleListProps {
   config: ArticleListConfig;
 }
 
-export function ArticleList({ limit, config }: ArticleListProps) {
-  const [articles, setArticles] = useState<Article[]>([]);
+function ArticleListInner({ limit, config }: ArticleListProps) {
+  const [articles, setArticles] = useState<Article[] | null>(null);
   const [totalPages, setTotalPages] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [config]);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setArticles([]);
 
     const query: ArticleListConfig = {
       ...config,
@@ -41,7 +34,6 @@ export function ArticleList({ limit, config }: ArticleListProps) {
           (_, i) => i + 1,
         ),
       );
-      setLoading(false);
     });
 
     return () => {
@@ -49,7 +41,7 @@ export function ArticleList({ limit, config }: ArticleListProps) {
     };
   }, [config, currentPage, limit]);
 
-  if (loading) {
+  if (articles === null) {
     return <div className="article-preview">Loading articles...</div>;
   }
 
@@ -85,4 +77,9 @@ export function ArticleList({ limit, config }: ArticleListProps) {
       )}
     </>
   );
+}
+
+export function ArticleList({ limit, config }: ArticleListProps) {
+  const configKey = `${config.type}-${JSON.stringify(config.filters)}`;
+  return <ArticleListInner key={configKey} limit={limit} config={config} />;
 }
