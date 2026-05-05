@@ -1,53 +1,61 @@
 const API_ROOT = "https://api.realworld.show/api";
 
-function getToken(): string | null {
-  return window.localStorage.getItem("jwtToken");
+interface RequestOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
 }
 
-export function saveToken(token: string): void {
-  window.localStorage.setItem("jwtToken", token);
-}
-
-export function destroyToken(): void {
-  window.localStorage.removeItem("jwtToken");
-}
-
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  const headers: HeadersInit = {
+async function request<T>(
+  url: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  const token = localStorage.getItem("jwtToken");
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Token ${token}` } : {}),
-    ...(options.headers as Record<string, string>),
+    ...options.headers,
   };
+
+  if (token) {
+    headers["Authorization"] = `Token ${token}`;
+  }
 
   const response = await fetch(`${API_ROOT}${url}`, {
     ...options,
     headers,
   });
 
-  const body = await response.json();
-
   if (!response.ok) {
-    throw body;
+    const error = await response.json();
+    throw error.errors ? error : { errors: error.error };
   }
 
-  return body as T;
+  // For DELETE requests that may return no content
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  return response.json() as Promise<T>;
 }
 
-export const api = {
-  get: <T>(url: string) => request<T>(url),
+export function get<T>(url: string): Promise<T> {
+  return request<T>(url, { method: "GET" });
+}
 
-  post: <T>(url: string, data?: unknown) =>
-    request<T>(url, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+export function post<T>(url: string, body?: unknown): Promise<T> {
+  return request<T>(url, {
+    method: "POST",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
 
-  put: <T>(url: string, data?: unknown) =>
-    request<T>(url, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
+export function put<T>(url: string, body?: unknown): Promise<T> {
+  return request<T>(url, {
+    method: "PUT",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
 
-  del: <T>(url: string) => request<T>(url, { method: "DELETE" }),
-};
+export function del<T>(url: string): Promise<T> {
+  return request<T>(url, { method: "DELETE" });
+}

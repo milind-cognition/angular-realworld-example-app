@@ -2,97 +2,121 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
   type ReactNode,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import type { User } from "../types";
 import { AuthApi } from "../api/auth";
-import { saveToken, destroyToken } from "../api/agent";
 
-interface AuthContextType {
-  user: User | null;
+export interface AuthContextType {
+  currentUser: User | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (
-    username: string,
-    email: string,
-    password: string,
-  ) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  register: (credentials: {
+    username: string;
+    email: string;
+    password: string;
+  }) => Promise<void>;
   logout: () => void;
   updateUser: (user: Partial<User>) => Promise<void>;
+  loadUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
-
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = window.localStorage.getItem("jwtToken");
-    if (token) {
-      AuthApi.getCurrentUser()
-        .then((u) => {
-          saveToken(u.token);
-          setUser(u);
-        })
-        .catch(() => {
-          destroyToken();
-        })
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
+  const setAuth = useCallback((user: User) => {
+    localStorage.setItem("jwtToken", user.token);
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+  }, []);
+
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem("jwtToken");
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+  }, []);
+
+  const loadUser = useCallback(async () => {
+    const token = localStorage.getItem("jwtToken");
+    if (!token) {
+      clearAuth();
+      return;
     }
-  }, []);
+    try {
+      const user = await AuthApi.getCurrentUser();
+      setAuth(user);
+    } catch {
+      clearAuth();
+    }
+  }, [setAuth, clearAuth]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const u = await AuthApi.login(email, password);
-    saveToken(u.token);
-    setUser(u);
-  }, []);
+  if (!initialized) {
+    setInitialized(true);
+    void loadUser();
+  }
+
+  const login = useCallback(
+    async (credentials: { email: string; password: string }) => {
+      const user = await AuthApi.login(credentials);
+      setAuth(user);
+    },
+    [setAuth],
+  );
 
   const register = useCallback(
-    async (username: string, email: string, password: string) => {
-      const u = await AuthApi.register(username, email, password);
-      saveToken(u.token);
-      setUser(u);
+    async (credentials: {
+      username: string;
+      email: string;
+      password: string;
+    }) => {
+      const user = await AuthApi.register(credentials);
+      setAuth(user);
     },
-    [],
+    [setAuth],
   );
 
   const logout = useCallback(() => {
-    destroyToken();
-    setUser(null);
-  }, []);
+    clearAuth();
+    navigate("/");
+  }, [clearAuth, navigate]);
 
-  const updateUser = useCallback(async (userData: Partial<User>) => {
-    const u = await AuthApi.update(userData);
-    setUser(u);
-  }, []);
+  const updateUser = useCallback(
+    async (user: Partial<User>) => {
+      const updatedUser = await AuthApi.updateUser(user);
+      setAuth(updatedUser);
+    },
+    [setAuth],
+  );
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
+        currentUser,
+        isAuthenticated,
         login,
         register,
         logout,
         updateUser,
+        loadUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

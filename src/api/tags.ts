@@ -1,7 +1,11 @@
-import { api } from "./agent";
+import { get } from "./agent";
+
+interface TagsResponse {
+  tags: string[];
+}
 
 export const TagsApi = {
   getAll(): Promise<string[]> {
-    return api.get<{ tags: string[] }>("/tags").then((data) => data.tags);
+    return get<TagsResponse>("/tags").then((res) => res.tags);
   },
 };

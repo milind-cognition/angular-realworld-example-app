@@ -1,17 +1,4 @@
-export interface User {
-  email: string;
-  token: string;
-  username: string;
-  bio: string;
-  image: string;
-}
-
-export interface Profile {
-  username: string;
-  bio: string;
-  image: string;
-  following: boolean;
-}
+import type { Profile } from "./profile";
 
 export interface Article {
   slug: string;
@@ -26,13 +13,6 @@ export interface Article {
   author: Profile;
 }
 
-export interface Comment {
-  id: string;
-  body: string;
-  createdAt: string;
-  author: Profile;
-}
-
 export interface ArticleListConfig {
   type: string;
   filters: {
@@ -42,8 +22,4 @@ export interface ArticleListConfig {
     limit?: number;
     offset?: number;
   };
-}
-
-export interface Errors {
-  errors: Record<string, string>;
 }

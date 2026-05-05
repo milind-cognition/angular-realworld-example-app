@@ -1,26 +1,39 @@
-import { api } from "./agent";
+import { get, post, put } from "./agent";
 import type { User } from "../types";
 
+interface UserResponse {
+  user: User;
+}
+
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+interface RegisterCredentials {
+  username: string;
+  email: string;
+  password: string;
+}
+
 export const AuthApi = {
-  login(email: string, password: string): Promise<User> {
-    return api
-      .post<{ user: User }>("/users/login", { user: { email, password } })
-      .then((data) => data.user);
+  login(credentials: LoginCredentials): Promise<User> {
+    return post<UserResponse>("/users/login", { user: credentials }).then(
+      (res) => res.user,
+    );
   },
 
-  register(username: string, email: string, password: string): Promise<User> {
-    return api
-      .post<{ user: User }>("/users", {
-        user: { username, email, password },
-      })
-      .then((data) => data.user);
+  register(credentials: RegisterCredentials): Promise<User> {
+    return post<UserResponse>("/users", { user: credentials }).then(
+      (res) => res.user,
+    );
   },
 
   getCurrentUser(): Promise<User> {
-    return api.get<{ user: User }>("/user").then((data) => data.user);
+    return get<UserResponse>("/user").then((res) => res.user);
   },
 
-  update(user: Partial<User>): Promise<User> {
-    return api.put<{ user: User }>("/user", { user }).then((data) => data.user);
+  updateUser(user: Partial<User>): Promise<User> {
+    return put<UserResponse>("/user", { user }).then((res) => res.user);
   },
 };
