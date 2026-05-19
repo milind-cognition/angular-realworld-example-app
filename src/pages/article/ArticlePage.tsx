@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import { Articles, Comments } from "../../api/agent";
 import { useAuth } from "../../context/AuthContext";
 import type { Article, Comment } from "../../types";
@@ -131,7 +132,7 @@ export function ArticlePage() {
           <div className="col-md-12">
             <div
               dangerouslySetInnerHTML={{
-                __html: marked(article.body) as string,
+                __html: DOMPurify.sanitize(marked(article.body) as string),
               }}
             />
             <ul className="tag-list">

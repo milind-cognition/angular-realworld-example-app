@@ -25,7 +25,10 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     headers,
   });
 
-  const body = await response.json();
+  const body =
+    response.status === 204 || response.headers.get("content-length") === "0"
+      ? null
+      : await response.json();
 
   if (!response.ok) {
     throw body;
